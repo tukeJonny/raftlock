@@ -1,0 +1,62 @@
+syntax = "proto3";
+package pb;
+
+service RaftLock {
+    rpc AcquireLock (AcquireLockRequest) returns (AcquireLockResponse) {}
+    rpc ReleaseLock (ReleaseLockRequest) returns (ReleaseLockResponse) {}
+    rpc JoinCluster (JoinClusterRequest) returns (JoinClusterResponse) {}
+    rpc Nodes (NodesRequest) returns (NodesResponse) {}
+    rpc Stats (StatsRequest) returns (StatsResponse) {}
+}
+
+// acquire lock
+message AcquireLockRequest {
+    string id = 1;
+}
+
+message AcquireLockResponse {
+
+}
+
+// release lock
+message ReleaseLockRequest {
+    string id = 1;
+}
+
+message ReleaseLockResponse {
+
+}
+
+// join cluster
+message JoinClusterRequest {
+    string node_id = 1;
+    string remote_address = 2;
+}
+
+message JoinClusterResponse {
+
+}
+
+// stats
+message StatsRequest {
+
+}
+
+message StatsResponse {
+    map<string,string> stats = 1;
+}
+
+// nodes
+message Node {
+    string node_id = 1;
+    string addr = 2;
+    string suffrage = 3;
+}
+
+message NodesRequest {
+
+}
+
+message NodesResponse {
+    repeated Node nodes = 1;
+}

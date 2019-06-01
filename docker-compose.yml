@@ -1,0 +1,77 @@
+version: '3'
+
+services:
+
+  raftlock1:
+    build: .
+    environment:
+      RAFTLOCK_NODE_ID: "node01"
+      RAFTLOCK_GRPC_ADDRESS: ":8091"
+      RAFTLOCK_RAFT_ADDRESS: ":4041"
+      RAFTLOCK_RAFT_DIRECTORY: /usr/src/app/raftdir
+      RAFTLOCK_TIMEOUT: 60
+    volumes:
+      - ./raftdirs/raftdir1:/usr/src/app/raftdir
+    command: serve run
+    ports:
+      - "8091"
+      - "4041"
+      - "8091:8091"
+    networks:
+      raft:
+        ipv4_address: '10.1.0.10'
+
+  raftlock2:
+    build: .
+    restart: on-failure
+    environment:
+      RAFTLOCK_NODE_ID: "node02"
+      RAFTLOCK_GRPC_ADDRESS: ":8092"
+      RAFTLOCK_RAFT_ADDRESS: ":4042"
+      RAFTLOCK_RAFT_DIRECTORY: /usr/src/app/raftdir
+      RAFTLOCK_JOIN_ADDRESS: "raftlock1:8091"
+      RAFTLOCK_ADVERTISE_ADDRESS: "10.1.0.11:4042"
+      RAFTLOCK_TIMEOUT: 60
+    volumes:
+      - ./raftdirs/raftdir2:/usr/src/app/raftdir
+    command: serve join
+    ports:
+      - "8092"
+      - "4042"
+      - "8092:8092"
+    networks:
+      raft:
+        ipv4_address: '10.1.0.11'
+    depends_on:
+      - raftlock1
+
+  raftlock3:
+    build: .
+    restart: on-failure
+    environment:
+      RAFTLOCK_NODE_ID: "node03"
+      RAFTLOCK_GRPC_ADDRESS: ":8093"
+      RAFTLOCK_RAFT_ADDRESS: ":4043"
+      RAFTLOCK_RAFT_DIRECTORY: /usr/src/app/raftdir
+      RAFTLOCK_JOIN_ADDRESS: "raftlock1:8091"
+      RAFTLOCK_ADVERTISE_ADDRESS: "10.1.0.12:4043"
+      RAFTLOCK_TIMEOUT: 60
+    volumes:
+      - ./raftdirs/raftdir3:/usr/src/app/raftdir
+    command: serve join
+    ports:
+      - "8093"
+      - "4043"
+      - "8093:8093"
+    networks:
+      raft:
+        ipv4_address: '10.1.0.12'
+    depends_on:
+      - raftlock1
+
+networks:
+  raft:
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.1.0.0/24
