@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 
 	"github.com/tukejonny/raftlock/subcmd"
@@ -35,6 +36,7 @@ func cliMain() int {
 	}
 
 	if err := app.Run(os.Args); err != nil {
+		log.Println(err.Error())
 		return 1
 	}
 

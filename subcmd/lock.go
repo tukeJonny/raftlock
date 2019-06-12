@@ -2,7 +2,6 @@ package subcmd
 
 import (
 	"context"
-	"log"
 
 	"github.com/tukejonny/raftlock/pb"
 	"github.com/urfave/cli"
@@ -40,7 +39,6 @@ var Lock = cli.Command{
 			Action: func(cliCtx *cli.Context) error {
 				conn, err := grpc.Dial(grpcAddr, grpc.WithInsecure())
 				if err != nil {
-					log.Println(err.Error())
 					return err
 				}
 				defer conn.Close()
@@ -48,7 +46,6 @@ var Lock = cli.Command{
 				cli := pb.NewRaftLockClient(conn)
 				_, err = cli.AcquireLock(context.TODO(), &pb.AcquireLockRequest{Id: id})
 				if err != nil {
-					log.Println(err.Error())
 					return err
 				}
 
@@ -76,7 +73,6 @@ var Lock = cli.Command{
 			Action: func(cliCtx *cli.Context) error {
 				conn, err := grpc.Dial(grpcAddr, grpc.WithInsecure())
 				if err != nil {
-					log.Println(err.Error())
 					return err
 				}
 				defer conn.Close()
@@ -84,7 +80,6 @@ var Lock = cli.Command{
 				cli := pb.NewRaftLockClient(conn)
 				_, err = cli.ReleaseLock(context.TODO(), &pb.ReleaseLockRequest{Id: id})
 				if err != nil {
-					log.Println(err.Error())
 					return err
 				}
 

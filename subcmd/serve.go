@@ -43,13 +43,11 @@ func startService(isLeader bool) (<-chan error, error) {
 	log.Printf("joinAddr=%s\n", joinAddr)
 
 	if err := svc.Store.Open(isLeader, nodeID, maxpool, retainSnapshotCnt, time.Duration(timeout)*time.Second); err != nil {
-		log.Println(err.Error())
 		return nil, err
 	}
 
 	lis, err := net.Listen("tcp", grpcAddr)
 	if err != nil {
-		log.Println(err.Error())
 		return nil, err
 	}
 
@@ -123,7 +121,6 @@ var Serve = cli.Command{
 			Action: func(cliCtx *cli.Context) error {
 				grpcErrCh, err := startService(true)
 				if err != nil {
-					log.Println(err.Error())
 					return err
 				}
 
@@ -132,7 +129,6 @@ var Serve = cli.Command{
 
 				select {
 				case err := <-grpcErrCh:
-					log.Println(err.Error())
 					return err
 				case <-sigCh:
 				}
@@ -162,13 +158,11 @@ var Serve = cli.Command{
 			Action: func(cliCtx *cli.Context) error {
 				grpcErrCh, err := startService(false)
 				if err != nil {
-					log.Println(err.Error())
 					return err
 				}
 
 				conn, err := grpc.Dial(joinAddr, grpc.WithInsecure())
 				if err != nil {
-					log.Println(err.Error())
 					return err
 				}
 				defer conn.Close()
@@ -176,7 +170,6 @@ var Serve = cli.Command{
 				cli := pb.NewRaftLockClient(conn)
 				_, err = cli.JoinCluster(context.TODO(), &pb.JoinClusterRequest{NodeId: nodeID, RemoteAddress: advertiseAddr})
 				if err != nil {
-					log.Println(err.Error())
 					return err
 				}
 
