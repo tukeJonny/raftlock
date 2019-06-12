@@ -2,6 +2,7 @@ package subcmd
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -30,7 +31,7 @@ var (
 	timeout int
 )
 
-func startService(isLeader bool) <-chan error {
+func startService(isLeader bool) (<-chan error, error) {
 	grpcServer, svc := raftlock.NewService()
 	svc.Store.RaftBind = raftAddr
 	svc.Store.RaftDir = raftDir
@@ -42,12 +43,14 @@ func startService(isLeader bool) <-chan error {
 	log.Printf("joinAddr=%s\n", joinAddr)
 
 	if err := svc.Store.Open(isLeader, nodeID, maxpool, retainSnapshotCnt, time.Duration(timeout)*time.Second); err != nil {
-		panic(err)
+		log.Println(err.Error())
+		return nil, err
 	}
 
 	lis, err := net.Listen("tcp", grpcAddr)
 	if err != nil {
-		panic(err)
+		log.Println(err.Error())
+		return nil, err
 	}
 
 	grpcErrCh := make(chan error, 1)
@@ -56,7 +59,7 @@ func startService(isLeader bool) <-chan error {
 		grpcErrCh <- grpcServer.Serve(lis)
 	}()
 
-	return grpcErrCh
+	return grpcErrCh, nil
 }
 
 var Serve = cli.Command{
@@ -118,14 +121,19 @@ var Serve = cli.Command{
 			Usage:     "start server",
 			ArgsUsage: " ",
 			Action: func(cliCtx *cli.Context) error {
-				grpcErrCh := startService(true)
+				grpcErrCh, err := startService(true)
+				if err != nil {
+					log.Println(err.Error())
+					return err
+				}
 
 				sigCh := make(chan os.Signal, 1)
 				signal.Notify(sigCh, os.Interrupt)
 
 				select {
 				case err := <-grpcErrCh:
-					panic(err)
+					log.Println(err.Error())
+					return err
 				case <-sigCh:
 				}
 
@@ -152,18 +160,24 @@ var Serve = cli.Command{
 				},
 			},
 			Action: func(cliCtx *cli.Context) error {
-				grpcErrCh := startService(false)
+				grpcErrCh, err := startService(false)
+				if err != nil {
+					log.Println(err.Error())
+					return err
+				}
 
 				conn, err := grpc.Dial(joinAddr, grpc.WithInsecure())
 				if err != nil {
-					panic(err)
+					log.Println(err.Error())
+					return err
 				}
 				defer conn.Close()
 
 				cli := pb.NewRaftLockClient(conn)
 				_, err = cli.JoinCluster(context.TODO(), &pb.JoinClusterRequest{NodeId: nodeID, RemoteAddress: advertiseAddr})
 				if err != nil {
-					panic(err)
+					log.Println(err.Error())
+					return err
 				}
 
 				sigCh := make(chan os.Signal, 1)
@@ -171,7 +185,8 @@ var Serve = cli.Command{
 
 				select {
 				case err := <-grpcErrCh:
-					panic(err)
+					fmt.Println(err.Error())
+					return err
 				case <-sigCh:
 				}
 

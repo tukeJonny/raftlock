@@ -19,7 +19,7 @@ type fsm Store
 func (f *fsm) Apply(l *raft.Log) interface{} {
 	var evt lockEvent
 	if err := json.Unmarshal(l.Data, &evt); err != nil {
-		panic(ErrUnmarshalLockEvt)
+		return nil
 	}
 
 	switch newLockOp(evt.op) {
@@ -28,7 +28,7 @@ func (f *fsm) Apply(l *raft.Log) interface{} {
 	case opRelease:
 		return f.applyRelease(evt.id)
 	default:
-		panic(ErrUnknownOperation)
+		return nil
 	}
 }
 

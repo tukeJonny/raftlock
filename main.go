@@ -8,6 +8,10 @@ import (
 )
 
 func main() {
+	os.Exit(cliMain())
+}
+
+func cliMain() int {
 	app := cli.NewApp()
 	app.Name = "raftlock"
 	app.Usage = "lockmgr with raft concensus example"
@@ -30,5 +34,9 @@ func main() {
 		return nil
 	}
 
-	app.Run(os.Args)
+	if err := app.Run(os.Args); err != nil {
+		return 1
+	}
+
+	return 0
 }
